@@ -5,28 +5,18 @@
 </head>
 
 <body>
-  <div id="container">
-    <video autoplay="true" id="videoElement">
-     
-    </video>
-</div>
+    <video id="localVideo" autoplay playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+  
+    <div>
+      <button id="startButton">Start</button>
+      <button id="callButton">Call</button>
+      <button id="hangupButton">Hang Up</button>
+    </div>
 
 <script>
-  var video = document.querySelector("#videoElement");
- 
- navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
-  
- if (navigator.getUserMedia) {       
-     navigator.getUserMedia({video: true}, handleVideo, videoError);
- }
-  
- function handleVideo(stream) {
-     video.src = window.URL.createObjectURL(stream);
- }
-  
- function videoError(e) {
-     // do something
- }
+    var socket = io();
 </script>
+  
 </body>
 </html>
