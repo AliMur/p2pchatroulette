@@ -5,18 +5,10 @@
 </head>
 
 <body>
-    <video id="localVideo" autoplay playsinline></video>
+  <div id="videos">
+    <video id="localVideo" autoplay muted playsinline></video>
     <video id="remoteVideo" autoplay playsinline></video>
-  
-    <div>
-      <button id="startButton">Start</button>
-      <button id="callButton">Call</button>
-      <button id="hangupButton">Hang Up</button>
-    </div>
-
-<script>
-    var socket = io();
-</script>
+  </div>
   
 
   <% include ../partials/header.ejs %>
