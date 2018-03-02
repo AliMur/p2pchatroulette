@@ -1,5 +1,9 @@
 'use strict';
 
+
+/** **  **  **  ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
+
+
 var isChannelReady = false;
 var isInitiator = false;
 var isStarted = false;
@@ -28,10 +32,9 @@ var room = 'foo';
 
 var socket = io.connect();
 
-if (room !== '') {
-  socket.emit('create or join', room);
-  console.log('Attempted to create or  join room', room);
-}
+
+socket.emit('create or join', '');
+console.log('Attempted to create or  join room');
 
 socket.on('created', function(room) {
   console.log('Created room ' + room);
@@ -119,9 +122,10 @@ var constraints = {
 console.log('Getting user media with constraints', constraints);
 
 if (location.hostname !== 'localhost') {
-  requestTurn(
-    'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
-  );
+  // we don't want a turn server
+  // requestTurn(
+  //   'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
+  // );
 }
 
 function maybeStart() {
@@ -335,3 +339,4 @@ function removeCN(sdpLines, mLineIndex) {
   sdpLines[mLineIndex] = mLineElements.join(' ');
   return sdpLines;
 }
+
