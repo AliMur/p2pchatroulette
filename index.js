@@ -8,32 +8,40 @@ var io = require('socket.io')(http);
 
 // constants
 const maxClients = 2;
-var nonFullRooms={
-  arr:[], // array of room names
-  pos:{}, // key=room name | val= position in arr
-  add : function(room){
+
+// Object to maintain a list of non-full rooms
+function Rooms(){
+  this.arr=[], // array of room names
+  this.pos={} // key=room name | val= position in arr
+  // used a map because lookup on map is O(1) , where as indexOf on array is O(n)
+  // https://stackoverflow.com/questions/32234733/javascript-what-lookup-is-faster-array-indexof-vs-object-hash
+};
+Rooms.prototype.add=function(room){
     // if the room isn't already in here , add it
     if(!(room in this.pos)){
       this.arr.push(room);
       this.pos[room] = this.arr.length-1;
     }
     return;
-  },
-  remove : function(room){
-    // if the room is in here , remove it
-    if(room in this.pos){
-      this.arr.splice(this.pos, 1); // remove from array
-      delete this.pos[room];  // remove from pos dictionary
-    }
-  },
-  get : function(){
-    if(this.arr.length === 0){
-      return null;
-    }
-    let p = Math.floor(Math.random() * this.arr.length);
-    return this.arr[p];
+  };
+Rooms.prototype.remove=function(room){
+  // if the room is in here , remove it
+  if(room in this.pos){
+    this.arr.splice(this.pos, 1); // remove from array
+    delete this.pos[room];  // remove from pos dictionary
   }
 };
+Rooms.prototype.get=function(){
+  if(this.arr.length === 0){
+    // TODO : replace with debug in future
+    console.log('arr is empty');
+    return null;
+  }
+  let p = Math.floor(Math.random() * this.arr.length);
+  return this.arr[p];
+};
+
+var nonFullRooms = new Rooms();
 
 // cases :
 // 1. when room has 0 clients- remove the room from the nonFullRoom object by finding out its position in the arr through the pos dictionary
@@ -175,7 +183,7 @@ io.sockets.on('connection', function(socket) {
   });
 
 });
- 
+
 
 
 http.listen(PORT, () => console.log(`Listening on ${ PORT }`));
