@@ -17,29 +17,40 @@ function Rooms(){
   // https://stackoverflow.com/questions/32234733/javascript-what-lookup-is-faster-array-indexof-vs-object-hash
 };
 Rooms.prototype.add=function(room){
-    // if the room isn't already in here , add it
-    if(!(room in this.pos)){
-      this.arr.push(room);
-      this.pos[room] = this.arr.length-1;
-    }
-    return;
-  };
+  // if the room isn't already in here , add it
+  if(!(room in this.pos)){
+    // TODO : replace with debug in future
+    console.log(`room ${room} added at location ${this.arr.length}`);
+    this.pos[room] = this.arr.length;
+    this.arr.push(room);
+  }
+  else{
+    // TODO : replace with debug in future
+    console.log(`room not added its already in there`);
+  }
+  return;
+};
 Rooms.prototype.remove=function(room){
   // if the room is in here , remove it
   if(room in this.pos){
-    this.arr.splice(this.pos, 1); // remove from array
-    delete this.pos[room];  // remove from pos dictionary
+    // TODO : replace with debug in future
+    console.log(`removing room ${room} from list of non-full rooms`);
+    this.arr.splice(this.pos[room], 1); // remove from array
+    delete this.pos[room];  // remove from map
   }
 };
 Rooms.prototype.get=function(){
   if(this.arr.length === 0){
     // TODO : replace with debug in future
-    console.log('arr is empty');
+    console.log(`arr is empty`);
     return null;
   }
   let p = Math.floor(Math.random() * this.arr.length);
   return this.arr[p];
 };
+Rooms.prototype.length = function(){
+  return this.arr.length;
+}
 
 var nonFullRooms = new Rooms();
 
@@ -75,14 +86,20 @@ function getNumClients(room){
   return numClients;
 }
 
+// function log(socket , args){
+//   var array = ['Message from server:'];
+//   array.concat(args);
+//   socket.emit('log', array);
+// }
+
 function log(socket , args){
-  var array = ['Message from server:'];
-  array.concat(args);
-  socket.emit('log', array);
+  var array = [];
+  console.log(array.concat(args));
 }
 
 function createOrJoin(socket){
-
+    // TODO : replace with debug in future
+    console.log(`createOrJoin begin`);
   // randomly pick a room with less than max clients
   var room = nonFullRooms.get();
   // if no nonfull room is found
@@ -112,13 +129,15 @@ function createOrJoin(socket){
     // if room has max clients in it now
     if((numClients+1) === maxClients){
       nonFullRooms.remove(room);
-      socket.emit('full', room);
+      //socket.emit('full', room);
     }
   } 
+    // TODO : replace with debug in future
+    console.log(`createOrJoin end`);
 }
 
 function getRoomID(socket){
-  var rooms = socket.rooms; // get the client's room
+  var rooms = Object.keys(socket.rooms).filter(item => item!=socket.id); // get the client's room
   if(rooms.length > 0){
     return rooms[0];
   }else{
@@ -133,18 +152,27 @@ function bye(socket){
     // move the client out of the room
     log(socket , ['removing client from room']);
     socket.leaveAll();
+    console.log(`check the number of clients left in the room`);
     // check the number of clients left in the room
     var numClients = getNumClients(room);
+    console.log(`${numClients} clients left in the room`);
     if(numClients === 0){
       // if room is empty , remove it from the list of non full rooms
+      console.log(`room is empty , remove it from the list of non full rooms`);
       nonFullRooms.remove(room);
-    }else{
+    }else if(numClients < maxClients){
       // if the room is not empty then try adding it to the list of non full rooms
+      console.log(`room is not empty add it to the list of non full rooms`);
       nonFullRooms.add(room);
     }
   }
   log(socket , ['adding client to new room']);
-  // try adding the client to a different non full room
+}
+
+function next(socket){
+  // first remove the client from his current room
+  bye(socket);
+  // now try adding him to what ever room is available
   createOrJoin(socket);
 }
 
@@ -152,13 +180,16 @@ io.sockets.on('connection', function(socket) {
 
 
   socket.on('message', function(message) {
+    console.log(`client said message ${message}`);    // TODO : replace with debug in future
     log(socket , ['Client said: ', message]);
     var room = getRoomID(socket); // get the client's room
+    console.log(`get room id returned ${room}`);    // TODO : replace with debug in future
     if(room !=null){
+      console.log(`sending message to client`);    // TODO : replace with debug in future
       // send to all clients in the room except the sender
       socket.to(room).emit('message', message);
     }else{
-      createOrJoin(socket);
+      //createOrJoin(socket);
     }
   });
 
@@ -171,7 +202,7 @@ io.sockets.on('connection', function(socket) {
     var ifaces = os.networkInterfaces();
     for (var dev in ifaces) {
       ifaces[dev].forEach(function(details) {
-        if (details.family === 'IPv4' && details.address !== '127.0.0.1') {
+        if (details.family === 'IPv4') {
           socket.emit('ipaddr', details.address);
         }
       });
@@ -180,6 +211,10 @@ io.sockets.on('connection', function(socket) {
 
   socket.on('bye', function(){
     bye(socket);
+  });
+
+  socket.on('next',function(){
+    next(socket);
   });
 
 });
