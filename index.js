@@ -86,6 +86,11 @@ function getNumClients(room){
   return numClients;
 }
 
+// count of all the clients currently online
+function getClientCount(){
+  return Object.keys(io.sockets.connected).length;
+}
+
 // function log(socket , args){
 //   var array = ['Message from server:'];
 //   array.concat(args);
@@ -122,8 +127,10 @@ function createOrJoin(socket){
   } 
   else if (numClients > 0 && numClients < maxClients) {
     log(socket , ['Client ID ' + socket.id + ' joined room ' + room]);
-    io.sockets.in(room).emit('join', room);
+    // tell all the clients in the room that an other client is about to join
+    io.sockets.in(room).emit('join', room, socket.id);
     socket.join(room);
+    // tell the client that it has joined the room
     socket.emit('joined', room, socket.id);
     io.sockets.in(room).emit('ready');
     // if room has max clients in it now
@@ -134,6 +141,8 @@ function createOrJoin(socket){
   } 
     // TODO : replace with debug in future
     console.log(`createOrJoin end`);
+    sendNonFullRoomCount(socket);
+    sendClientCount();
 }
 
 function getRoomID(socket){
@@ -145,6 +154,15 @@ function getRoomID(socket){
   }
 }
 
+function sendNonFullRoomCount(socket){
+  //socket.broadcast.emit('non-full-room-count', nonFullRooms.length());  // broadcasts to every one except the current socket
+  io.local.emit('non-full-room-count', nonFullRooms.length());  // broadcasts to every one in the current node instance
+}
+
+function sendClientCount(socket){
+  io.local.emit('client-count', getClientCount());  // broadcasts to every one in the current node instance
+}
+
 function bye(socket){
   log(socket , ['received bye']);
   var room = getRoomID(socket); // get the client's room
@@ -152,6 +170,8 @@ function bye(socket){
     // move the client out of the room
     log(socket , ['removing client from room']);
     socket.leaveAll();
+    // tell the other clients in the room that this client has left
+    socket.to(room).emit('message', 'bye');
     console.log(`check the number of clients left in the room`);
     // check the number of clients left in the room
     var numClients = getNumClients(room);
@@ -167,6 +187,8 @@ function bye(socket){
     }
   }
   log(socket , ['adding client to new room']);
+  sendNonFullRoomCount(socket);
+  sendClientCount(socket);
 }
 
 function next(socket){
@@ -215,6 +237,10 @@ io.sockets.on('connection', function(socket) {
 
   socket.on('next',function(){
     next(socket);
+  });
+
+  socket.on('disconnect', function() {
+    bye(socket);
   });
 
 });

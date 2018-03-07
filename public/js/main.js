@@ -38,10 +38,11 @@ function joinNext(){
 socket.on('created', function(room) {
   // if there is no non-full room available, the client gets a new room and then waits for some one else to join it
   console.log('You created the room ' + room);
+  setInHTML('room',room);
 });
 
 // this should not usually happen
-socket.on('full', function(room) {
+socket.on('full', function(room,socketID) {
   console.log('Room ' + room + ' is full WTF!');
 });
 
@@ -51,11 +52,20 @@ socket.on('join', function (room){
 
 socket.on('joined', function(room) {
   console.log('you joined the room : ' + room);
+  setInHTML('room',room);
   invite();
 });
 
 socket.on('log', function(array) {
   console.log.apply(console, array);
+});
+
+socket.on('non-full-room-count', function (count){
+  setInHTML('non-full-room-count',count);
+});
+
+socket.on('client-count', function (count){
+  setInHTML('client-count',count);
 });
 
 ////////////////////////////////////////////////
@@ -142,8 +152,8 @@ function handleAnswerMsg(message){
 }
 
 window.onbeforeunload = function() {
-  sendMessage('bye');
   socket.emit('bye', '');
+  //sendMessage('bye');
 };
 
 function nextRoom(){
@@ -320,4 +330,8 @@ function removeCN(sdpLines, mLineIndex) {
 
   sdpLines[mLineIndex] = mLineElements.join(' ');
   return sdpLines;
+}
+
+function setInHTML(nodeID,val){
+  $( "#"+nodeID ).html( val );
 }
