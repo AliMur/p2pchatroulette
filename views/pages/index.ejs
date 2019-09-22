@@ -10,6 +10,12 @@
     <video id="remoteVideo" autoplay playsinline></video>
   </div>
   
+  <p>room id : <span id='room'></span></p>
+  <p>non-full rooms : <span id='non-full-room-count'></span></p>
+  <p>people online : <span id='client-count'></span></p>
+
+
+  <button type="button" class="btn btn-warning" onclick="nextRoom();">Next</button>
 
   <% include ../partials/header.ejs %>
 </body>
